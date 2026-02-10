@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import CreditScorePlant from "@/components/CreditScorePlant";
 import ScoreBreakdown from "@/components/ScoreBreakdown";
 import SubsidyRewards from "@/components/SubsidyRewards";
+import HarvestMeter from "@/components/HarvestMeter";
 import { TrendingUp, Percent, Clock, ArrowRight } from "lucide-react";
 
 interface KisanData {
@@ -12,9 +13,14 @@ interface KisanData {
   village: string;
   farmSize: string;
   mainCrop: string;
+  region: string;
   financialScore: number;
   agriculturalScore: number;
+  resilienceScore: number;
+  enablerScore: number;
   overallScore: number;
+  loanAmount: string;
+  regionCurve: number;
 }
 
 const defaultData: KisanData = {
@@ -22,9 +28,14 @@ const defaultData: KisanData = {
   village: "Chandpur",
   farmSize: "5",
   mainCrop: "Wheat",
+  region: "fertile",
   financialScore: 72,
   agriculturalScore: 68,
+  resilienceScore: 65,
+  enablerScore: 60,
   overallScore: 70,
+  loanAmount: "50000",
+  regionCurve: 1.0,
 };
 
 const Dashboard = () => {
@@ -125,6 +136,19 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Harvest Meter */}
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <HarvestMeter
+            score={data.overallScore}
+            loanAmount={parseInt(data.loanAmount) || 50000}
+          />
+        </motion.div>
+
         {/* Score Breakdown */}
         <motion.div
           className="mb-8"
@@ -135,6 +159,9 @@ const Dashboard = () => {
           <ScoreBreakdown
             financialScore={data.financialScore}
             agriculturalScore={data.agriculturalScore}
+            resilienceScore={data.resilienceScore}
+            enablerScore={data.enablerScore}
+            regionCurve={data.regionCurve}
           />
         </motion.div>
 
