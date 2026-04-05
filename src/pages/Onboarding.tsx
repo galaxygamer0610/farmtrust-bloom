@@ -48,14 +48,12 @@ const Onboarding = () => {
     );
 
     // --- Pillar 3: Risk & Resilience (25%) ---
-    // The "Resilience Buffer": High policy support offsets bad rainfall
     const rawRisk = Math.round(
       p(data.rainfallPattern) * 0.3 +
       p(data.floodRisk) * 0.25 +
       p(data.commodityPriceIndex) * 0.2 +
       p(data.policySupportScore) * 0.25
     );
-    // If policy support is high (≥80), boost resilience even if rainfall is poor
     const policyBuffer = p(data.policySupportScore) >= 80 ? 10 : 0;
     const resilienceScore = Math.min(100, rawRisk + policyBuffer);
 
@@ -98,7 +96,7 @@ const Onboarding = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="font-display text-3xl font-bold text-foreground">Your KisanTrust Journey 🌾</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Your KisanCred Journey 🌾</h1>
           <p className="text-muted-foreground">4 simple steps · Takes about 5 minutes · Every detail helps your score</p>
         </motion.div>
         <OnboardingForm onComplete={handleComplete} />
