@@ -95,7 +95,7 @@ const Index = () => {
                 Calculate Your Score 🌱
               </Button>
               <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="border-kisan-cream/30 text-kisan-cream hover:bg-kisan-cream/10 text-base">
+                <Button size="lg" className="bg-gradient-gold text-accent-foreground text-base font-semibold hover:opacity-90 shadow-elevated">
                   View Demo Dashboard
                 </Button>
               </Link>

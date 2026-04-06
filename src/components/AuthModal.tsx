@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Mail, Lock, User, ArrowRight, Sprout } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface AuthModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const resetForm = () => {
     setEmail("");
@@ -57,6 +59,9 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
     // Simulate auth (will be replaced with Lovable Cloud auth)
     setTimeout(() => {
       setLoading(false);
+      // Simulate receiving an auth token
+      const authToken = "simulated-jwt-token-123"; 
+      login(authToken); // Use the login function from AuthContext
       sessionStorage.setItem("kisanUser", JSON.stringify({ email, name: name || email.split("@")[0] }));
       handleClose();
       onSuccess?.();
@@ -67,7 +72,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -83,10 +88,10 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
 
           {/* Modal */}
           <motion.div
-            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-elevated sm:p-8"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="max-w-md rounded-2xl border border-border bg-card p-6 shadow-elevated sm:p-8 max-h-[90vh] overflow-y-auto m-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             <button

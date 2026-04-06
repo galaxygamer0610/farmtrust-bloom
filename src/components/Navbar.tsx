@@ -1,14 +1,22 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Sprout, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import AuthModal from "@/components/AuthModal";
 
 const Navbar = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const handleAuthSuccess = () => {
+    setAuthOpen(false);
+    navigate("/onboarding"); // Or wherever you want to redirect after successful login/signup
+  };
 
   const links = [
     { to: "/", label: "Home" },
-    { to: "/onboarding", label: "Get Started" },
     { to: "/dashboard", label: "Dashboard" },
     { to: "/subsidies", label: "Subsidies" },
   ];
@@ -38,16 +46,32 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          <Button
+            variant="ghost"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => setAuthOpen(true)}
+          >
+            Login
+          </Button>
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="rounded-lg p-2 text-muted-foreground md:hidden"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <Button
+            variant="ghost"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => setAuthOpen(true)}
+          >
+            Login
+          </Button>
+          <button
+            className="rounded-lg p-2 text-muted-foreground"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -67,8 +91,19 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          <Button
+            variant="ghost"
+            className="block w-full justify-start px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setAuthOpen(true);
+              setMobileOpen(false);
+            }}
+          >
+            Login
+          </Button>
         </div>
       )}
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={handleAuthSuccess} />
     </nav>
   );
 };
