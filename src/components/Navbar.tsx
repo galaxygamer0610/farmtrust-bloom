@@ -22,6 +22,7 @@ const Navbar = () => {
   ];
 
   return (
+    <>
     <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
@@ -103,8 +104,9 @@ const Navbar = () => {
           </Button>
         </div>
       )}
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={handleAuthSuccess} />
     </nav>
+    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={handleAuthSuccess} />
+    </>
   );
 };
 

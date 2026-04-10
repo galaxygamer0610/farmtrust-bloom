@@ -79,7 +79,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={handleClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -88,7 +88,8 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
 
           {/* Modal */}
           <motion.div
-            className="max-w-md rounded-2xl border border-border bg-card p-6 shadow-elevated sm:p-8 max-h-[90vh] overflow-y-auto m-auto"
+            className="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl p-6 shadow-2xl sm:p-8 max-h-[90vh] overflow-y-auto"
+            style={{ boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)" }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -96,7 +97,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
           >
             <button
               onClick={handleClose}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -107,10 +108,10 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-hero">
                 <Sprout className="h-7 w-7 text-primary-foreground" />
               </div>
-              <h2 className="font-display text-2xl font-bold text-foreground">
+              <h2 className="font-display text-2xl font-bold text-white">
                 {mode === "choice" ? "Welcome to KisanCred" : mode === "login" ? "Welcome Back" : "Join KisanCred"}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-white/60">
                 {mode === "choice"
                   ? "Your farm is your credit score"
                   : mode === "login"
@@ -137,13 +138,12 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                   </Button>
                   <Button
                     onClick={() => setMode("register")}
-                    variant="outline"
-                    className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                    className="w-full gap-2 bg-gradient-hero text-primary-foreground hover:opacity-90"
                     size="lg"
                   >
                     <User className="h-4 w-4" /> Create Account
                   </Button>
-                  <p className="pt-2 text-center text-xs text-muted-foreground">
+                  <p className="pt-2 text-center text-xs text-white/50">
                     By continuing, you agree to our Terms of Service
                   </p>
                 </motion.div>
@@ -158,44 +158,44 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                 >
                   {mode === "register" && (
                     <div>
-                      <Label htmlFor="auth-name" className="text-foreground">Full Name</Label>
+                      <Label htmlFor="auth-name" className="text-white/80">Full Name</Label>
                       <div className="relative mt-1">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                         <Input
                           id="auth-name"
                           placeholder="Ramesh Kumar"
                           value={name}
                           onChange={e => setName(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
                         />
                       </div>
                     </div>
                   )}
                   <div>
-                    <Label htmlFor="auth-email" className="text-foreground">Email</Label>
+                    <Label htmlFor="auth-email" className="text-white/80">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                       <Input
                         id="auth-email"
                         type="email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="auth-password" className="text-foreground">Password</Label>
+                    <Label htmlFor="auth-password" className="text-white/80">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                       <Input
                         id="auth-password"
                         type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
                       />
                     </div>
                   </div>
@@ -217,7 +217,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                   <button
                     type="button"
                     onClick={() => { setMode("choice"); setError(""); }}
-                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                    className="w-full text-center text-sm text-white/50 hover:text-white transition-colors"
                   >
                     ← Back to options
                   </button>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sprout, Shield, HandCoins, BarChart3, Users, Leaf, Brain, FileText, MessageCircle, ChevronRight, Star } from "lucide-react";
@@ -94,11 +94,6 @@ const Index = () => {
               >
                 Calculate Your Score 🌱
               </Button>
-              <Link to="/dashboard">
-                <Button size="lg" className="bg-gradient-gold text-accent-foreground text-base font-semibold hover:opacity-90 shadow-elevated">
-                  View Demo Dashboard
-                </Button>
-              </Link>
             </div>
           </motion.div>
         </div>
@@ -240,16 +235,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-8">
-        <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Sprout className="h-4 w-4 text-primary" />
-            <span className="font-display font-bold text-foreground">KisanCred</span>
-          </div>
-          <p>AI-powered credit scoring for Indian farmers. © 2026</p>
-        </div>
-      </footer>
     </div>
   );
 };

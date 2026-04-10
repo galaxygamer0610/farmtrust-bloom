@@ -6,7 +6,8 @@ import CreditScorePlant from "@/components/CreditScorePlant";
 import ScoreBreakdown from "@/components/ScoreBreakdown";
 import SubsidyRewards from "@/components/SubsidyRewards";
 import HarvestMeter from "@/components/HarvestMeter";
-import { TrendingUp, Percent, Clock, ArrowRight } from "lucide-react";
+import { TrendingUp, Percent, Clock, ArrowRight, Loader2 } from "lucide-react";
+import { getLatestAssessment, getFarmerProfile, isAuthenticated } from "@/services/database";
 
 interface KisanData {
   name: string;
@@ -21,6 +22,23 @@ interface KisanData {
   overallScore: number;
   loanAmount: string;
   regionCurve: number;
+  // Backend-specific fields (optional)
+  probability_of_default?: number;
+  risk_category?: string;
+  lending_recommendation?: string;
+  top_features?: Array<{
+    label: string;
+    value: number;
+    importance: number;
+  }>;
+  eligible_subsidies?: Array<{
+    scheme_id: string;
+    scheme_name: string;
+    benefits: string;
+    match_score: number;
+  }>;
+  model_version?: string;
+  assessed_at?: string;
 }
 
 const defaultData: KisanData = {
@@ -40,13 +58,74 @@ const defaultData: KisanData = {
 
 const Dashboard = () => {
   const [data, setData] = useState<KisanData>(defaultData);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("kisanData");
-    if (stored) {
-      setData(JSON.parse(stored));
-    }
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      // Check if user is authenticated
+      const authenticated = await isAuthenticated();
+
+      if (authenticated) {
+        // Try to load from database
+        const [assessment, profile] = await Promise.all([
+          getLatestAssessment(),
+          getFarmerProfile(),
+        ]);
+
+        if (assessment && profile) {
+          // Map database data to dashboard format
+          setData({
+            name: profile.name,
+            village: profile.village || '',
+            farmSize: profile.farm_size?.toString() || '0',
+            mainCrop: profile.main_crop || '',
+            region: profile.region || 'fertile',
+            financialScore: assessment.financial_score || 70,
+            agriculturalScore: assessment.agricultural_score || 70,
+            resilienceScore: assessment.resilience_score || 70,
+            enablerScore: assessment.enabler_score || 70,
+            overallScore: Math.round(assessment.credit_score),
+            loanAmount: (assessment.loan_amount * 1000).toString(), // Convert back to full amount
+            regionCurve: 1.0,
+            // Backend-specific fields
+            probability_of_default: assessment.probability_of_default,
+            risk_category: assessment.risk_category,
+            lending_recommendation: assessment.lending_recommendation,
+            model_version: assessment.model_version,
+            assessed_at: assessment.assessed_at,
+          });
+          console.log('Data loaded from database');
+        } else {
+          // Fall back to sessionStorage
+          const stored = sessionStorage.getItem("kisanData");
+          if (stored) {
+            setData(JSON.parse(stored));
+            console.log('Data loaded from sessionStorage');
+          }
+        }
+      } else {
+        // Not authenticated, use sessionStorage
+        const stored = sessionStorage.getItem("kisanData");
+        if (stored) {
+          setData(JSON.parse(stored));
+          console.log('Data loaded from sessionStorage (not authenticated)');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      // Fall back to sessionStorage on error
+      const stored = sessionStorage.getItem("kisanData");
+      if (stored) {
+        setData(JSON.parse(stored));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getInterestRate = (score: number) => {
     if (score >= 80) return 6.5;
@@ -68,19 +147,28 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="font-display text-3xl font-bold text-foreground">
-            Namaste, {data.name} 🙏
-          </h1>
-          <p className="text-muted-foreground">
-            {data.farmSize} acres in {data.village} · Growing {data.mainCrop}
-          </p>
-        </motion.div>
+        {loading ? (
+          <div className="flex min-h-[400px] items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+              <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <motion.div
+              className="mb-8"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h1 className="font-display text-3xl font-bold text-foreground">
+                Namaste, {data.name} 🙏
+              </h1>
+              <p className="text-muted-foreground">
+                {data.farmSize} acres in {data.village} · Growing {data.mainCrop}
+              </p>
+            </motion.div>
 
         {/* Top Row: Plant + Quick Stats */}
         <div className="mb-8 grid gap-6 lg:grid-cols-3">
@@ -175,6 +263,67 @@ const Dashboard = () => {
           <SubsidyRewards score={data.overallScore} />
         </motion.div>
 
+        {/* Backend ML Insights (if available) */}
+        {data.risk_category && (
+          <motion.div
+            className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 p-6 shadow-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <h2 className="mb-4 font-display text-xl font-bold text-foreground">
+              🤖 AI-Powered Insights
+            </h2>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="text-sm text-muted-foreground">Risk Category</p>
+                <p className="font-display text-lg font-bold text-foreground">{data.risk_category}</p>
+              </div>
+              
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="text-sm text-muted-foreground">Default Probability</p>
+                <p className="font-display text-lg font-bold text-foreground">
+                  {((data.probability_of_default || 0) * 100).toFixed(1)}%
+                </p>
+              </div>
+            </div>
+
+            {data.lending_recommendation && (
+              <div className="mt-4 rounded-lg border border-secondary/20 bg-secondary/5 p-4">
+                <p className="text-sm font-medium text-muted-foreground">Lending Recommendation</p>
+                <p className="mt-1 text-foreground">{data.lending_recommendation}</p>
+              </div>
+            )}
+
+            {data.top_features && data.top_features.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-muted-foreground">Top Factors Affecting Your Score</p>
+                <div className="space-y-2">
+                  {data.top_features.slice(0, 3).map((feature, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{feature.label}</p>
+                        <p className="text-xs text-muted-foreground">Value: {feature.value.toFixed(3)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-primary">{feature.importance.toFixed(1)}%</p>
+                        <p className="text-xs text-muted-foreground">importance</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.model_version && (
+              <p className="mt-4 text-xs text-muted-foreground">
+                Model: {data.model_version} · Assessed: {data.assessed_at ? new Date(data.assessed_at).toLocaleString() : 'N/A'}
+              </p>
+            )}
+          </motion.div>
+        )}
+
         {/* CTA */}
         {!sessionStorage.getItem("kisanData") && (
           <motion.div
@@ -196,6 +345,8 @@ const Dashboard = () => {
             </Link>
           </motion.div>
         )}
+      </>
+    )}
       </div>
     </div>
   );
