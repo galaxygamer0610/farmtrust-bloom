@@ -1,0 +1,12 @@
+{
+  "enterprise_id": "FARM-001",
+  "enterprise_size": "Small",
+  "region": "East",
+  "quarter": "Q2",
+  "annual_revenue": 280.0,
+  "annual_expenses": 195.0,
+  "loan_amount": 120.0,
+  "landholding_size": 1.5,
+  "crop_type": "Rice",
+  "irrigation_type": "Rainfed"
+}
