@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Mail, Lock, User, ArrowRight, Sprout } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { X, Mail, Lock, User, ArrowRight, Sprout, CheckCircle2 } from "lucide-react";
+import { authHelpers } from "@/lib/auth-helpers";
+import { toast } from "sonner";
 
 interface AuthModalProps {
   open: boolean;
@@ -13,19 +14,20 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
-  const [mode, setMode] = useState<"choice" | "login" | "register">("choice");
+  const [mode, setMode] = useState<"choice" | "login" | "register" | "verify">("choice");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [successMessage, setSuccessMessage] = useState("");
 
   const resetForm = () => {
     setEmail("");
     setPassword("");
     setName("");
     setError("");
+    setSuccessMessage("");
     setMode("choice");
   };
 
@@ -36,7 +38,9 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     setError("");
+    setSuccessMessage("");
     setLoading(true);
 
     // Validation
@@ -56,30 +60,89 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
       return;
     }
 
-    // Simulate auth (will be replaced with Lovable Cloud auth)
-    setTimeout(() => {
+    try {
+      if (mode === "register") {
+        // Sign up new user
+        const { user, error: signUpError } = await authHelpers.signUp(email, password, name);
+
+        if (signUpError) {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (user) {
+          // Show verification message
+          setMode("verify");
+          setSuccessMessage("Account created! Please check your email to verify your account.");
+          toast.success("Verification email sent! Check your inbox.");
+          setLoading(false);
+          return;
+        }
+      } else if (mode === "login") {
+        // Sign in existing user
+        const { user, error: signInError } = await authHelpers.signIn(email, password);
+
+        if (signInError) {
+          setError(signInError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (user) {
+          // Check if email is verified
+          const isVerified = await authHelpers.isEmailVerified();
+          
+          if (!isVerified) {
+            setError("Please verify your email before logging in. Check your inbox.");
+            setLoading(false);
+            return;
+          }
+
+          toast.success("Welcome back!");
+          setLoading(false);
+          
+          // Close modal first, then navigate
+          handleClose();
+          
+          // Delay navigation to avoid race condition
+          setTimeout(() => {
+            onSuccess?.();
+          }, 150);
+        }
+      }
+    } catch (err: any) {
+      console.error("Auth error:", err);
+      setError(err?.message || "An unexpected error occurred. Please try again.");
       setLoading(false);
-      // Simulate receiving an auth token
-      const authToken = "simulated-jwt-token-123"; 
-      login(authToken); // Use the login function from AuthContext
-      sessionStorage.setItem("kisanUser", JSON.stringify({ email, name: name || email.split("@")[0] }));
-      handleClose();
-      onSuccess?.();
-    }, 1000);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setLoading(true);
+    const { error } = await authHelpers.resendVerificationEmail(email);
+    
+    if (error) {
+      toast.error("Failed to resend email. Please try again.");
+    } else {
+      toast.success("Verification email sent! Check your inbox.");
+    }
+    
+    setLoading(false);
   };
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
             onClick={handleClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -88,16 +151,15 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
 
           {/* Modal */}
           <motion.div
-            className="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl p-6 shadow-2xl sm:p-8 max-h-[90vh] overflow-y-auto"
-            style={{ boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)" }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-elevated sm:p-8"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             <button
               onClick={handleClose}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -108,10 +170,10 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-hero">
                 <Sprout className="h-7 w-7 text-primary-foreground" />
               </div>
-              <h2 className="font-display text-2xl font-bold text-white">
+              <h2 className="font-display text-2xl font-bold text-foreground">
                 {mode === "choice" ? "Welcome to KisanCred" : mode === "login" ? "Welcome Back" : "Join KisanCred"}
               </h2>
-              <p className="mt-1 text-sm text-white/60">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "choice"
                   ? "Your farm is your credit score"
                   : mode === "login"
@@ -138,14 +200,53 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                   </Button>
                   <Button
                     onClick={() => setMode("register")}
-                    className="w-full gap-2 bg-gradient-hero text-primary-foreground hover:opacity-90"
+                    variant="outline"
+                    className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
                     size="lg"
                   >
                     <User className="h-4 w-4" /> Create Account
                   </Button>
-                  <p className="pt-2 text-center text-xs text-white/50">
+                  <p className="pt-2 text-center text-xs text-muted-foreground">
                     By continuing, you agree to our Terms of Service
                   </p>
+                </motion.div>
+              ) : mode === "verify" ? (
+                <motion.div
+                  key="verify"
+                  className="space-y-4 text-center"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <CheckCircle2 className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-foreground">Check Your Email</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      We've sent a verification link to <strong>{email}</strong>
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Click the link in the email to verify your account and start using KisanCred.
+                    </p>
+                  </div>
+                  <div className="space-y-2 pt-2">
+                    <Button
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {loading ? "Sending..." : "Resend Verification Email"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.form
@@ -158,44 +259,44 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                 >
                   {mode === "register" && (
                     <div>
-                      <Label htmlFor="auth-name" className="text-white/80">Full Name</Label>
+                      <Label htmlFor="auth-name" className="text-foreground">Full Name</Label>
                       <div className="relative mt-1">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id="auth-name"
                           placeholder="Ramesh Kumar"
                           value={name}
                           onChange={e => setName(e.target.value)}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
+                          className="pl-10"
                         />
                       </div>
                     </div>
                   )}
                   <div>
-                    <Label htmlFor="auth-email" className="text-white/80">Email</Label>
+                    <Label htmlFor="auth-email" className="text-foreground">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="auth-email"
                         type="email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
+                        className="pl-10"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="auth-password" className="text-white/80">Password</Label>
+                    <Label htmlFor="auth-password" className="text-foreground">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="auth-password"
                         type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-white/50"
+                        className="pl-10"
                       />
                     </div>
                   </div>
@@ -217,7 +318,7 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                   <button
                     type="button"
                     onClick={() => { setMode("choice"); setError(""); }}
-                    className="w-full text-center text-sm text-white/50 hover:text-white transition-colors"
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
                   >
                     ← Back to options
                   </button>

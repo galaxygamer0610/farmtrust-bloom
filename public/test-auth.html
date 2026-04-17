@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Diagnostic - KisanCred</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #1a202c; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { color: #718096; margin-bottom: 32px; font-size: 14px; }
+        .test-box {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-box h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .result {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .result.success { border-left: 4px solid #10b981; }
+        .result.error { border-left: 4px solid #ef4444; }
+        .result.info { border-left: 4px solid #3b82f6; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .status { 
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status.pass { background: #d1fae5; color: #065f46; }
+        .status.fail { background: #fee2e2; color: #991b1b; }
+        .alert {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #92400e;
+        }
+        .alert strong { display: block; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Auth Diagnostic Tool</h1>
+        <p class="subtitle">Test your Supabase authentication setup</p>
+
+        <div class="alert">
+            <strong>⚠️ Important:</strong>
+            This page must be accessed through your dev server at <code>http://localhost:5173/test-auth.html</code>
+        </div>
+
+        <!-- Test 1 -->
+        <div class="test-box">
+            <h2>1. Environment Variables</h2>
+            <button onclick="testEnvironment()">Run Test</button>
+            <div id="result-1" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2 -->
+        <div class="test-box">
+            <h2>2. Supabase REST API</h2>
+            <button onclick="testRestAPI()">Run Test</button>
+            <div id="result-2" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3 -->
+        <div class="test-box">
+            <h2>3. Supabase Auth API</h2>
+            <button onclick="testAuthAPI()">Run Test</button>
+            <div id="result-3" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 4 -->
+        <div class="test-box">
+            <h2>4. Project Status</h2>
+            <button onclick="testProjectStatus()">Run Test</button>
+            <div id="result-4" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 5 -->
+        <div class="test-box">
+            <h2>5. Run All Tests</h2>
+            <button onclick="runAllTests()">Run All Tests</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qwwzjxdypoyzjbzvpseu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3d3pqeGR5cG95empienZwc2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MjU2NzcsImV4cCI6MjA1MDEwMTY3N30.GhLZp_ETq1UGYWDkBB1iCg_sypg-Gnt';
+
+        function showResult(id, className, message) {
+            const el = document.getElementById(`result-${id}`);
+            el.className = `result ${className}`;
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        async function testEnvironment() {
+            try {
+                const envUrl = import.meta.env?.VITE_SUPABASE_URL;
+                const envKey = import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+                let result = '=== Environment Variables ===\n\n';
+                
+                if (!envUrl || !envKey) {
+                    result += '❌ FAILED\n\n';
+                    result += `VITE_SUPABASE_URL: ${envUrl || 'MISSING'}\n`;
+                    result += `VITE_SUPABASE_PUBLISHABLE_KEY: ${envKey ? 'Present' : 'MISSING'}\n\n`;
+                    result += 'FIX: Restart your dev server\n';
+                    result += 'Command: npm run dev';
+                    showResult(1, 'error', result);
+                    return false;
+                }
+
+                if (envUrl !== SUPABASE_URL) {
+                    result += '❌ FAILED\n\n';
+                    result += `Expected URL: ${SUPABASE_URL}\n`;
+                    result += `Found URL: ${envUrl}\n\n`;
+                    result += 'FIX: Check your .env file';
+                    showResult(1, 'error', result);
+                    return false;
+                }
+
+                result += '✅ PASSED\n\n';
+                result += `VITE_SUPABASE_URL: ${envUrl}\n`;
+                result += `VITE_SUPABASE_PUBLISHABLE_KEY: ${envKey.substring(0, 30)}...\n`;
+                showResult(1, 'success', result);
+                return true;
+
+            } catch (error) {
+                const result = `❌ ERROR\n\n${error.message}\n\nNote: Must run from dev server (http://localhost:5173)`;
+                showResult(1, 'error', result);
+                return false;
+            }
+        }
+
+        async function testRestAPI() {
+            let result = '=== REST API Test ===\n\n';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                result += `Status: ${response.status} ${response.statusText}\n`;
+                result += `URL: ${SUPABASE_URL}/rest/v1/\n\n`;
+
+                if (response.ok) {
+                    result += '✅ PASSED\n\n';
+                    result += 'REST API is accessible';
+                    showResult(2, 'success', result);
+                    return true;
+                } else {
+                    result += '❌ FAILED\n\n';
+                    if (response.status === 401) {
+                        result += 'Possible causes:\n';
+                        result += '• Invalid API key\n';
+                        result += '• Project is paused\n\n';
+                        result += 'FIX: Check Supabase dashboard\n';
+                        result += 'URL: https://supabase.com/dashboard/project/qwwzjxdypoyzjbzvpseu';
+                    } else {
+                        result += `Unexpected status: ${response.status}`;
+                    }
+                    showResult(2, 'error', result);
+                    return false;
+                }
+            } catch (error) {
+                result += '❌ ERROR\n\n';
+                result += `${error.message}\n\n`;
+                result += 'Possible causes:\n';
+                result += '• No internet connection\n';
+                result += '• Firewall blocking request\n';
+                result += '• Project is paused';
+                showResult(2, 'error', result);
+                return false;
+            }
+        }
+
+        async function testAuthAPI() {
+            let result = '=== Auth API Test ===\n\n';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                result += `Status: ${response.status} ${response.statusText}\n`;
+                result += `URL: ${SUPABASE_URL}/auth/v1/settings\n\n`;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const emailEnabled = data.external?.email !== false;
+                    
+                    result += emailEnabled ? '✅ PASSED\n\n' : '⚠️ WARNING\n\n';
+                    result += `Email provider: ${emailEnabled ? 'Enabled ✅' : 'Disabled ❌'}\n`;
+                    result += `Autoconfirm: ${data.autoconfirm ? 'Yes' : 'No'}\n`;
+                    
+                    if (!emailEnabled) {
+                        result += '\nFIX: Enable email provider in Supabase\n';
+                        result += 'Path: Authentication → Providers → Email';
+                    }
+                    
+                    showResult(3, emailEnabled ? 'success' : 'error', result);
+                    return emailEnabled;
+                } else {
+                    result += '❌ FAILED\n\n';
+                    if (response.status === 401) {
+                        result += 'Authentication failed!\n\n';
+                        result += 'This is the 401 error you\'re seeing.\n\n';
+                        result += 'Possible causes:\n';
+                        result += '• Project is PAUSED (most common)\n';
+                        result += '• Invalid API key\n';
+                        result += '• Auth not configured\n\n';
+                        result += 'FIX: Go to Supabase dashboard and check project status\n';
+                        result += 'URL: https://supabase.com/dashboard/project/qwwzjxdypoyzjbzvpseu';
+                    }
+                    showResult(3, 'error', result);
+                    return false;
+                }
+            } catch (error) {
+                result += '❌ ERROR\n\n';
+                result += `${error.message}`;
+                showResult(3, 'error', result);
+                return false;
+            }
+        }
+
+        async function testProjectStatus() {
+            let result = '=== Project Status ===\n\n';
+            
+            try {
+                // Try to access health endpoint
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+
+                if (response.ok) {
+                    result += '✅ Project is ACTIVE\n\n';
+                    result += 'Your Supabase project is running and accessible.\n';
+                    result += 'All systems operational.';
+                    showResult(4, 'success', result);
+                    return true;
+                } else if (response.status === 401) {
+                    result += '❌ Project might be PAUSED\n\n';
+                    result += 'Getting 401 errors usually means:\n';
+                    result += '1. Project is paused (most common)\n';
+                    result += '2. Invalid credentials\n\n';
+                    result += 'ACTION REQUIRED:\n';
+                    result += '1. Go to: https://supabase.com/dashboard/project/qwwzjxdypoyzjbzvpseu\n';
+                    result += '2. Check if it says "Paused" at the top\n';
+                    result += '3. If paused, click "Restore" button\n';
+                    result += '4. Wait 2-3 minutes for project to start\n';
+                    result += '5. Run this test again';
+                    showResult(4, 'error', result);
+                    return false;
+                } else {
+                    result += `⚠️ Unexpected status: ${response.status}\n\n`;
+                    result += 'Check Supabase dashboard for project status.';
+                    showResult(4, 'info', result);
+                    return false;
+                }
+            } catch (error) {
+                result += '❌ Cannot reach project\n\n';
+                result += `Error: ${error.message}\n\n`;
+                result += 'Check:\n';
+                result += '• Internet connection\n';
+                result += '• Firewall settings\n';
+                result += '• Project status in dashboard';
+                showResult(4, 'error', result);
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            console.log('Running all tests...');
+            
+            const results = {
+                env: await testEnvironment(),
+                rest: await testRestAPI(),
+                auth: await testAuthAPI(),
+                status: await testProjectStatus()
+            };
+
+            console.log('Test Results:', results);
+
+            const allPassed = Object.values(results).every(r => r === true);
+            
+            if (allPassed) {
+                alert('✅ All tests passed! Your Supabase setup is working correctly.');
+            } else {
+                const failed = Object.entries(results)
+                    .filter(([_, passed]) => !passed)
+                    .map(([name]) => name);
+                alert(`❌ Some tests failed: ${failed.join(', ')}\n\nCheck the results above for details.`);
+            }
+        }
+    </script>
+</body>
+</html>
