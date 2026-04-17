@@ -53,8 +53,26 @@ const Index = () => {
     setAuthOpen(true);
   };
 
-  const handleAuthSuccess = () => {
-    navigate("/onboarding");
+  const handleAuthSuccess = async () => {
+    try {
+      // Small delay to ensure auth state is updated and modal closes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Check if user has completed onboarding
+      const { authHelpers } = await import("@/lib/auth-helpers");
+      const hasOnboarded = await authHelpers.hasCompletedOnboarding();
+      
+      // Navigate based on onboarding status
+      if (hasOnboarded) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to onboarding if there's an error
+      navigate("/onboarding", { replace: true });
+    }
   };
 
   return (
@@ -67,22 +85,22 @@ const Index = () => {
           <img src={heroImage} alt="Indian farmer in golden sunlit field" className="h-full w-full object-cover" loading="eager" />
           <div className="absolute inset-0 bg-gradient-to-r from-kisan-soil/90 via-kisan-soil/70 to-transparent" />
         </div>
-        <div className="container relative mx-auto px-4 py-20 md:py-32 lg:py-40">
+        <div className="container relative mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-20 lg:py-28">
           <motion.div
-            className="max-w-xl"
+            className="max-w-lg lg:max-w-xl"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-sm font-medium text-kisan-gold-light">
+            <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-kisan-gold-light">
               <Sprout className="h-4 w-4" />
               AI-Powered Credit Scoring for Farmers
             </div>
-            <h1 className="mb-4 font-display text-4xl font-extrabold leading-tight text-kisan-cream md:text-5xl lg:text-6xl">
+            <h1 className="mb-3 sm:mb-4 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-kisan-cream">
               Your Farm is Your
               <span className="block text-gradient-gold">Credit Score</span>
             </h1>
-            <p className="mb-8 text-lg text-kisan-cream/80">
+            <p className="mb-5 sm:mb-6 text-sm sm:text-base lg:text-lg text-kisan-cream/90 leading-relaxed">
               KisanCred uses machine learning to assess your creditworthiness from soil quality, 
               crop health, and financial habits—not just bank statements.
             </p>
@@ -90,33 +108,28 @@ const Index = () => {
               <Button
                 size="lg"
                 onClick={handleCTA}
-                className="bg-gradient-gold text-accent-foreground text-base font-semibold hover:opacity-90 shadow-elevated"
+                className="bg-gradient-gold text-accent-foreground px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold hover:opacity-90 shadow-elevated"
               >
                 Calculate Your Score 🌱
               </Button>
-              <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="border-kisan-cream/30 text-kisan-cream hover:bg-kisan-cream/10 text-base">
-                  View Demo Dashboard
-                </Button>
-              </Link>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="bg-card py-20">
-        <div className="container mx-auto px-4">
+      <section className="bg-card py-12 sm:py-16 md:py-20">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div
-            className="mb-12 text-center"
+            className="mb-8 sm:mb-10 md:mb-12 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="mb-2 font-display text-3xl font-bold text-foreground">How KisanCred Works</h2>
-            <p className="text-muted-foreground">Three simple steps to your AI-powered credit score</p>
+            <h2 className="mb-2 sm:mb-3 font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">How KisanCred Works</h2>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground">Three simple steps to your AI-powered credit score</p>
           </motion.div>
-          <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-3">
+          <div className="mx-auto grid max-w-4xl gap-8 sm:gap-10 md:grid-cols-3">
             {[
               { step: "1", emoji: "📝", title: "Share Your Story", desc: "Answer simple questions about your farm, finances, and region" },
               { step: "2", emoji: "🤖", title: "AI Analyzes", desc: "Our ML model calculates your score across 4 pillars" },
@@ -130,13 +143,13 @@ const Index = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
               >
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-gold text-3xl shadow-card">
+                <div className="mx-auto mb-3 sm:mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-gold text-2xl sm:text-3xl shadow-card">
                   {item.emoji}
                 </div>
-                <h3 className="mb-1 font-display text-lg font-bold text-foreground">{item.title}</h3>
+                <h3 className="mb-1 font-display text-base sm:text-lg font-bold text-foreground">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.desc}</p>
                 {i < 2 && (
-                  <ChevronRight className="absolute -right-4 top-8 hidden h-6 w-6 text-muted-foreground/40 md:block" />
+                  <ChevronRight className="absolute -right-4 top-8 hidden h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground/40 md:block" />
                 )}
               </motion.div>
             ))}
@@ -145,31 +158,31 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-20" aria-labelledby="features-heading">
-        <div className="container mx-auto px-4">
+      <section className="py-12 sm:py-16 md:py-20" aria-labelledby="features-heading">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div
-            className="mb-12 text-center"
+            className="mb-8 sm:mb-10 md:mb-12 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 id="features-heading" className="mb-2 font-display text-3xl font-bold text-foreground">Built for Farmers, Powered by AI</h2>
-            <p className="text-muted-foreground">Features that put you first</p>
+            <h2 id="features-heading" className="mb-2 sm:mb-3 font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Built for Farmers, Powered by AI</h2>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground">Features that put you first</p>
           </motion.div>
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                className="rounded-xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-elevated"
+                className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-card transition-shadow hover:shadow-elevated"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <f.icon className="h-5 w-5 text-primary" />
+                <div className="mb-3 sm:mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-primary/10">
+                  <f.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 </div>
-                <h3 className="mb-1 font-display text-lg font-bold text-foreground">{f.title}</h3>
+                <h3 className="mb-2 font-display text-base sm:text-lg md:text-xl font-bold text-foreground">{f.title}</h3>
                 <p className="text-sm text-muted-foreground">{f.description}</p>
               </motion.div>
             ))}
@@ -178,33 +191,33 @@ const Index = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-card py-20">
-        <div className="container mx-auto px-4">
+      <section className="bg-card py-10 sm:py-14 md:py-16">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div
-            className="mb-12 text-center"
+            className="mb-8 sm:mb-10 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="mb-2 font-display text-3xl font-bold text-foreground">Trusted by Farmers</h2>
-            <p className="text-muted-foreground">Real stories from real farmers</p>
+            <h2 className="mb-2 font-display text-2xl sm:text-3xl font-bold text-foreground">Trusted by Farmers</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Real stories from real farmers</p>
           </motion.div>
-          <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
+          <div className="mx-auto grid max-w-4xl gap-4 sm:gap-5 md:grid-cols-3">
             {testimonials.map((t, i) => (
               <motion.div
                 key={t.name}
-                className="rounded-xl border border-border bg-background p-5 shadow-card"
+                className="rounded-xl border border-border bg-background p-4 sm:p-5 shadow-card"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <div className="mb-3 flex gap-0.5">
+                <div className="mb-2 sm:mb-3 flex gap-0.5">
                   {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-accent text-accent" />
+                    <Star key={j} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-accent text-accent" />
                   ))}
                 </div>
-                <p className="mb-3 text-sm text-foreground">"{t.quote}"</p>
+                <p className="mb-2 sm:mb-3 text-sm text-foreground">"{t.quote}"</p>
                 <div>
                   <p className="text-sm font-semibold text-foreground">{t.name}</p>
                   <p className="text-xs text-muted-foreground">{t.location}</p>
@@ -216,40 +229,29 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="bg-gradient-hero py-16">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-gradient-hero py-10 sm:py-12 md:py-14">
+        <div className="container mx-auto max-w-3xl px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="mb-3 font-display text-3xl font-bold text-primary-foreground">
+            <h2 className="mb-2 sm:mb-3 font-display text-2xl sm:text-3xl font-bold text-primary-foreground">
               Every Farmer Deserves a Fair Chance
             </h2>
-            <p className="mb-6 text-primary-foreground/80">
+            <p className="mb-4 sm:mb-5 text-sm sm:text-base text-primary-foreground/80">
               Join thousands of farmers who've discovered their true credit potential.
             </p>
             <Button
               size="lg"
               onClick={handleCTA}
-              className="bg-gradient-gold text-accent-foreground text-base font-semibold hover:opacity-90 shadow-elevated"
+              className="bg-gradient-gold text-accent-foreground px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold hover:opacity-90 shadow-elevated"
             >
               Get Started Free 🌻
             </Button>
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-8">
-        <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Sprout className="h-4 w-4 text-primary" />
-            <span className="font-display font-bold text-foreground">KisanCred</span>
-          </div>
-          <p>AI-powered credit scoring for Indian farmers. © 2026</p>
-        </div>
-      </footer>
     </div>
   );
 };

@@ -7,20 +7,300 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
-      [_ in never]: never
+      farmers: {
+        Row: {
+          id: string
+          user_id: string | null
+          full_name: string
+          email: string
+          phone: string | null
+          farm_name: string | null
+          farm_location: string | null
+          farm_size_acres: number | null
+          crop_types: string[] | null
+          years_farming: number | null
+          government_id: string | null
+          bank_account_number: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          full_name: string
+          email: string
+          phone?: string | null
+          farm_name?: string | null
+          farm_location?: string | null
+          farm_size_acres?: number | null
+          crop_types?: string[] | null
+          years_farming?: number | null
+          government_id?: string | null
+          bank_account_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          full_name?: string
+          email?: string
+          phone?: string | null
+          farm_name?: string | null
+          farm_location?: string | null
+          farm_size_acres?: number | null
+          crop_types?: string[] | null
+          years_farming?: number | null
+          government_id?: string | null
+          bank_account_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      credit_scores: {
+        Row: {
+          id: string
+          farmer_id: string | null
+          overall_score: number | null
+          payment_history_score: number | null
+          farm_productivity_score: number | null
+          financial_stability_score: number | null
+          market_engagement_score: number | null
+          risk_level: string | null
+          credit_limit: number | null
+          calculated_at: string
+          last_updated: string
+        }
+        Insert: {
+          id?: string
+          farmer_id?: string | null
+          overall_score?: number | null
+          payment_history_score?: number | null
+          farm_productivity_score?: number | null
+          financial_stability_score?: number | null
+          market_engagement_score?: number | null
+          risk_level?: string | null
+          credit_limit?: number | null
+          calculated_at?: string
+          last_updated?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string | null
+          overall_score?: number | null
+          payment_history_score?: number | null
+          farm_productivity_score?: number | null
+          financial_stability_score?: number | null
+          market_engagement_score?: number | null
+          risk_level?: string | null
+          credit_limit?: number | null
+          calculated_at?: string
+          last_updated?: string
+        }
+      }
+      subsidies: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          subsidy_type: string | null
+          amount: number | null
+          eligibility_criteria: Json | null
+          min_credit_score: number | null
+          max_credit_score: number | null
+          available_from: string | null
+          available_until: string | null
+          is_active: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          subsidy_type?: string | null
+          amount?: number | null
+          eligibility_criteria?: Json | null
+          min_credit_score?: number | null
+          max_credit_score?: number | null
+          available_from?: string | null
+          available_until?: string | null
+          is_active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          subsidy_type?: string | null
+          amount?: number | null
+          eligibility_criteria?: Json | null
+          min_credit_score?: number | null
+          max_credit_score?: number | null
+          available_from?: string | null
+          available_until?: string | null
+          is_active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      subsidy_applications: {
+        Row: {
+          id: string
+          farmer_id: string | null
+          subsidy_id: string | null
+          application_status: string | null
+          applied_at: string
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          disbursed_at: string | null
+          disbursed_amount: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id?: string | null
+          subsidy_id?: string | null
+          application_status?: string | null
+          applied_at?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          disbursed_at?: string | null
+          disbursed_amount?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string | null
+          subsidy_id?: string | null
+          application_status?: string | null
+          applied_at?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          disbursed_at?: string | null
+          disbursed_amount?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      transactions: {
+        Row: {
+          id: string
+          farmer_id: string | null
+          transaction_type: string | null
+          amount: number
+          description: string | null
+          transaction_date: string
+          payment_status: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id?: string | null
+          transaction_type?: string | null
+          amount: number
+          description?: string | null
+          transaction_date: string
+          payment_status?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string | null
+          transaction_type?: string | null
+          amount?: number
+          description?: string | null
+          transaction_date?: string
+          payment_status?: string | null
+          created_at?: string
+        }
+      }
+      farm_activities: {
+        Row: {
+          id: string
+          farmer_id: string | null
+          activity_type: string | null
+          crop_type: string | null
+          area_covered: number | null
+          activity_date: string
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id?: string | null
+          activity_type?: string | null
+          crop_type?: string | null
+          area_covered?: number | null
+          activity_date: string
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string | null
+          activity_type?: string | null
+          crop_type?: string | null
+          area_covered?: number | null
+          activity_date?: string
+          notes?: string | null
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          farmer_id: string | null
+          title: string
+          message: string
+          notification_type: string | null
+          is_read: boolean | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id?: string | null
+          title: string
+          message: string
+          notification_type?: string | null
+          is_read?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string | null
+          title?: string
+          message?: string
+          notification_type?: string | null
+          is_read?: boolean | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_overall_credit_score: {
+        Args: {
+          p_payment_history: number
+          p_farm_productivity: number
+          p_financial_stability: number
+          p_market_engagement: number
+        }
+        Returns: number
+      }
+      determine_risk_level: {
+        Args: {
+          p_credit_score: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

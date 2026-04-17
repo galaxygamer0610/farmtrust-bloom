@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KisanCred Setup Verification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #718096;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        .test-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+        .test-section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        .status.pending { background: #fef3c7; color: #92400e; }
+        .status.success { background: #d1fae5; color: #065f46; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .test-result {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+        .test-result.success { border-left: 4px solid #10b981; }
+        .test-result.error { border-left: 4px solid #ef4444; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .icon { font-size: 20px; }
+        .summary {
+            margin-top: 32px;
+            padding: 20px;
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            display: none;
+        }
+        .summary.show { display: block; }
+        .summary h3 {
+            color: #166534;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .summary ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .summary li {
+            padding: 8px 0;
+            color: #166534;
+            font-size: 14px;
+        }
+        .summary li::before {
+            content: "✓ ";
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .error-summary {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        .error-summary h3 { color: #991b1b; }
+        .error-summary li { color: #991b1b; }
+        .error-summary li::before { content: "✗ "; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 KisanCred Setup Verification</h1>
+        <p class="subtitle">Run these tests to verify your Supabase configuration</p>
+
+        <!-- Test 1: Environment Variables -->
+        <div class="test-section">
+            <h2>
+                <span class="icon">📋</span>
+                Environment Variables
+                <span class="status pending" id="status-1">Pending</span>
+            </h2>
+            <button onclick="testEnvironment()">Run Test</button>
+            <div id="result-1" class="test-result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2: Supabase Connection -->
+        <div class="test-section">
+            <h2>
+                <span class="icon">🔌</span>
+                Supabase Connection
+                <span class="status pending" id="status-2">Pending</span>
+            </h2>
+            <button onclick="testConnection()">Run Test</button>
+            <div id="result-2" class="test-result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3: Database Tables -->
+        <div class="test-section">
+            <h2>
+                <span class="icon">🗄️</span>
+                Database Tables
+                <span class="status pending" id="status-3">Pending</span>
+            </h2>
+            <button onclick="testTables()">Run Test</button>
+            <div id="result-3" class="test-result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 4: Authentication -->
+        <div class="test-section">
+            <h2>
+                <span class="icon">🔐</span>
+                Authentication Setup
+                <span class="status pending" id="status-4">Pending</span>
+            </h2>
+            <button onclick="testAuth()">Run Test</button>
+            <div id="result-4" class="test-result" style="display:none;"></div>
+        </div>
+
+        <!-- Summary -->
+        <div id="summary" class="summary"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qwwzjxdypoyzjbzvpseu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3d3pqeGR5cG95empienZwc2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MjU2NzcsImV4cCI6MjA1MDEwMTY3N30.GhLZp_ETq1UGYWDkBB1iCg_sypg-Gnt';
+
+        let testResults = {
+            env: false,
+            connection: false,
+            tables: false,
+            auth: false
+        };
+
+        function updateStatus(testNum, status, message) {
+            const statusEl = document.getElementById(`status-${testNum}`);
+            const resultEl = document.getElementById(`result-${testNum}`);
+            
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = status === 'success' ? 'Passed ✓' : status === 'error' ? 'Failed ✗' : 'Pending';
+            
+            resultEl.className = `test-result ${status}`;
+            resultEl.innerHTML = message;
+            resultEl.style.display = 'block';
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const allTests = Object.values(testResults);
+            const completedTests = allTests.filter(t => t !== null).length;
+            
+            if (completedTests === 0) return;
+            
+            const passedTests = allTests.filter(t => t === true).length;
+            const failedTests = allTests.filter(t => t === false).length;
+            
+            const summaryEl = document.getElementById('summary');
+            summaryEl.className = 'summary show ' + (failedTests > 0 ? 'error-summary' : '');
+            
+            if (failedTests === 0 && completedTests === 4) {
+                summaryEl.innerHTML = `
+                    <h3>🎉 All Tests Passed!</h3>
+                    <ul>
+                        <li>Environment variables are configured correctly</li>
+                        <li>Supabase connection is working</li>
+                        <li>Database tables are deployed</li>
+                        <li>Authentication is configured</li>
+                    </ul>
+                    <p style="margin-top: 16px; color: #166534; font-weight: 600;">
+                        ✅ Your KisanCred setup is complete! You can now test user registration.
+                    </p>
+                `;
+            } else if (completedTests === 4) {
+                summaryEl.innerHTML = `
+                    <h3>⚠️ Some Tests Failed</h3>
+                    <p style="color: #991b1b; margin-bottom: 12px;">
+                        ${failedTests} test(s) failed. Please review the errors above and follow the setup guide.
+                    </p>
+                    <p style="color: #991b1b; font-size: 13px;">
+                        📖 See <strong>AUTHENTICATION_COMPLETE_SUMMARY.md</strong> for detailed troubleshooting steps.
+                    </p>
+                `;
+            }
+        }
+
+        async function testEnvironment() {
+            try {
+                // Check if running from dev server
+                const isDevServer = window.location.hostname === 'localhost' && window.location.port === '5173';
+                
+                if (!isDevServer) {
+                    updateStatus(1, 'error', `
+                        ❌ Not running from dev server<br>
+                        Expected: http://localhost:5173<br>
+                        Current: ${window.location.href}<br><br>
+                        <strong>Solution:</strong> Open this file through your Vite dev server, not directly.
+                    `);
+                    testResults.env = false;
+                    return;
+                }
+
+                // Try to access environment variables (only works in dev server)
+                const envUrl = import.meta.env?.VITE_SUPABASE_URL;
+                const envKey = import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+                if (!envUrl || !envKey) {
+                    updateStatus(1, 'error', `
+                        ❌ Environment variables not loaded<br><br>
+                        <strong>Expected:</strong><br>
+                        VITE_SUPABASE_URL: ${SUPABASE_URL}<br>
+                        VITE_SUPABASE_PUBLISHABLE_KEY: Present<br><br>
+                        <strong>Found:</strong><br>
+                        VITE_SUPABASE_URL: ${envUrl || 'Missing'}<br>
+                        VITE_SUPABASE_PUBLISHABLE_KEY: ${envKey ? 'Present' : 'Missing'}<br><br>
+                        <strong>Solution:</strong> Restart your dev server (npm run dev)
+                    `);
+                    testResults.env = false;
+                    return;
+                }
+
+                if (envUrl !== SUPABASE_URL) {
+                    updateStatus(1, 'error', `
+                        ❌ Incorrect Supabase URL<br><br>
+                        <strong>Expected:</strong> ${SUPABASE_URL}<br>
+                        <strong>Found:</strong> ${envUrl}<br><br>
+                        <strong>Solution:</strong> Check your .env file
+                    `);
+                    testResults.env = false;
+                    return;
+                }
+
+                updateStatus(1, 'success', `
+                    ✅ Environment variables loaded correctly<br><br>
+                    VITE_SUPABASE_URL: ${envUrl}<br>
+                    VITE_SUPABASE_PUBLISHABLE_KEY: Present (${envKey.substring(0, 20)}...)
+                `);
+                testResults.env = true;
+
+            } catch (error) {
+                updateStatus(1, 'error', `
+                    ❌ Error checking environment variables<br><br>
+                    ${error.message}<br><br>
+                    <strong>Note:</strong> This test must run from the Vite dev server (http://localhost:5173)
+                `);
+                testResults.env = false;
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    updateStatus(2, 'success', `
+                        ✅ Successfully connected to Supabase<br><br>
+                        Status: ${response.status} ${response.statusText}<br>
+                        URL: ${SUPABASE_URL}
+                    `);
+                    testResults.connection = true;
+                } else {
+                    updateStatus(2, 'error', `
+                        ❌ Connection failed<br><br>
+                        Status: ${response.status} ${response.statusText}<br><br>
+                        <strong>Possible causes:</strong><br>
+                        • Supabase project is paused<br>
+                        • Invalid API key<br>
+                        • Network/firewall issue
+                    `);
+                    testResults.connection = false;
+                }
+            } catch (error) {
+                updateStatus(2, 'error', `
+                    ❌ Connection error<br><br>
+                    ${error.message}<br><br>
+                    <strong>Possible causes:</strong><br>
+                    • No internet connection<br>
+                    • Supabase project is paused<br>
+                    • Firewall blocking request<br><br>
+                    <strong>Solution:</strong> Check https://supabase.com/dashboard/project/qwwzjxdypoyzjbzvpseu
+                `);
+                testResults.connection = false;
+            }
+        }
+
+        async function testTables() {
+            const requiredTables = [
+                'farmers',
+                'farmer_financial_data',
+                'api_fetched_data',
+                'ml_assessments',
+                'credit_scores',
+                'subsidies',
+                'subsidy_applications',
+                'transactions',
+                'farm_activities',
+                'notifications'
+            ];
+
+            try {
+                const results = await Promise.all(
+                    requiredTables.map(async (table) => {
+                        try {
+                            const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?limit=1`, {
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            return { table, exists: response.ok, status: response.status };
+                        } catch (error) {
+                            return { table, exists: false, error: error.message };
+                        }
+                    })
+                );
+
+                const existingTables = results.filter(r => r.exists);
+                const missingTables = results.filter(r => !r.exists);
+
+                if (missingTables.length === 0) {
+                    updateStatus(3, 'success', `
+                        ✅ All ${requiredTables.length} tables found<br><br>
+                        ${existingTables.map(t => `• ${t.table}`).join('<br>')}
+                    `);
+                    testResults.tables = true;
+                } else {
+                    updateStatus(3, 'error', `
+                        ❌ Missing ${missingTables.length} table(s)<br><br>
+                        <strong>Found (${existingTables.length}):</strong><br>
+                        ${existingTables.map(t => `• ${t.table}`).join('<br>')}<br><br>
+                        <strong>Missing (${missingTables.length}):</strong><br>
+                        ${missingTables.map(t => `• ${t.table}`).join('<br>')}<br><br>
+                        <strong>Solution:</strong> Run the SQL schema in Supabase dashboard<br>
+                        File: farmtrust-bloom/supabase-enhanced-schema.sql
+                    `);
+                    testResults.tables = false;
+                }
+            } catch (error) {
+                updateStatus(3, 'error', `
+                    ❌ Error checking tables<br><br>
+                    ${error.message}<br><br>
+                    Make sure Supabase connection test passes first.
+                `);
+                testResults.tables = false;
+            }
+        }
+
+        async function testAuth() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                if (response.ok) {
+                    const settings = await response.json();
+                    const emailEnabled = settings.external?.email !== false;
+                    
+                    updateStatus(4, emailEnabled ? 'success' : 'error', `
+                        ${emailEnabled ? '✅' : '⚠️'} Authentication endpoint accessible<br><br>
+                        Email provider: ${emailEnabled ? 'Enabled' : 'Disabled'}<br><br>
+                        ${!emailEnabled ? '<strong>Action needed:</strong> Enable email provider in Supabase dashboard' : 'Ready for user registration'}
+                    `);
+                    testResults.auth = emailEnabled;
+                } else {
+                    updateStatus(4, 'error', `
+                        ❌ Cannot access auth settings<br><br>
+                        Status: ${response.status}<br><br>
+                        Check Supabase dashboard authentication settings.
+                    `);
+                    testResults.auth = false;
+                }
+            } catch (error) {
+                updateStatus(4, 'error', `
+                    ❌ Error checking authentication<br><br>
+                    ${error.message}
+                `);
+                testResults.auth = false;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Auth Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .result { margin: 10px 0; padding: 10px; background: #2a2a2a; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Quick Auth Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const SUPABASE_URL = 'https://qwwzjxdypoyzjbzvpseu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3d3pqeGR5cG95empienZwc2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzODg4MzksImV4cCI6MjA5MTk2NDgzOX0.YpFH81S3e1jZoQVbohkIo-DaIoAN7r3VE2lbHwTOJB8';
+        
+        const results = document.getElementById('results');
+        
+        async function test() {
+            // Test 1: REST API
+            results.innerHTML += '<div class="result">Testing REST API...</div>';
+            try {
+                const res1 = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                results.innerHTML += `<div class="result ${res1.ok ? 'success' : 'error'}">REST API: ${res1.status} ${res1.ok ? '✅' : '❌'}</div>`;
+            } catch (e) {
+                results.innerHTML += `<div class="result error">REST API Error: ${e.message}</div>`;
+            }
+            
+            // Test 2: Auth API
+            results.innerHTML += '<div class="result">Testing Auth API...</div>';
+            try {
+                const res2 = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                results.innerHTML += `<div class="result ${res2.ok ? 'success' : 'error'}">Auth API: ${res2.status} ${res2.ok ? '✅' : '❌'}</div>`;
+                
+                if (res2.ok) {
+                    const data = await res2.json();
+                    results.innerHTML += `<div class="result success">Email enabled: ${data.external?.email !== false ? '✅' : '❌'}</div>`;
+                }
+            } catch (e) {
+                results.innerHTML += `<div class="result error">Auth API Error: ${e.message}</div>`;
+            }
+            
+            // Test 3: Tables
+            results.innerHTML += '<div class="result">Testing Database...</div>';
+            try {
+                const res3 = await fetch(`${SUPABASE_URL}/rest/v1/farmers?limit=1`, {
+                    headers: { 
+                        'apikey': SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                results.innerHTML += `<div class="result ${res3.ok ? 'success' : 'error'}">Database: ${res3.status} ${res3.ok ? '✅' : '❌'}</div>`;
+            } catch (e) {
+                results.innerHTML += `<div class="result error">Database Error: ${e.message}</div>`;
+            }
+            
+            results.innerHTML += '<div class="result success">✅ All tests complete!</div>';
+        }
+        
+        test();
+    </script>
+</body>
+</html>
