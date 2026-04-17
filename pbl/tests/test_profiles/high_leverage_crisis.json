@@ -1,0 +1,16 @@
+{
+  "expected_outcome": "HIGH RISK - Excessive debt compared to revenue and poor yield.",
+  "input": {
+    "enterprise_size": "Small",
+    "state": "Maharashtra",
+    "city": "Nashik",
+    "quarter": "Q1",
+    "annual_revenue": 80.0,
+    "annual_expenses": 95.0,
+    "loan_amount": 350.0,
+    "landholding_size": 1.5,
+    "crop_type": "Onion",
+    "irrigation_type": "Rainfed",
+    "yield_amount": 2.5
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "expected_outcome": "MEDIUM RISK - High climate exposure but manageable debt.",
+  "input": {
+    "enterprise_size": "Small",
+    "state": "Rajasthan",
+    "city": "Jodhpur",
+    "quarter": "Q1",
+    "annual_revenue": 120.0,
+    "annual_expenses": 70.0,
+    "loan_amount": 30.0,
+    "landholding_size": 5.0,
+    "crop_type": "Pulses",
+    "irrigation_type": "Rainfed",
+    "yield_amount": 4.0
+  }
+}

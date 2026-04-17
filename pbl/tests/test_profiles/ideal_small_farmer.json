@@ -1,0 +1,16 @@
+{
+  "expected_outcome": "LOW RISK - Perfect repayment profile with high yield and modern irrigation.",
+  "input": {
+    "enterprise_size": "Small",
+    "state": "Maharashtra",
+    "city": "Pune",
+    "quarter": "Q2",
+    "annual_revenue": 200.0,
+    "annual_expenses": 50.0,
+    "loan_amount": 10.0,
+    "landholding_size": 2.0,
+    "crop_type": "Wheat",
+    "irrigation_type": "Drip",
+    "yield_amount": 9.5
+  }
+}

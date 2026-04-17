@@ -1,0 +1,16 @@
+{
+  "expected_outcome": "LOW RISK / INELIGIBLE FOR SMALL SUBSIDIES - Strong financial results but large-scale land disqualifies from KCC/PM-Kisan.",
+  "input": {
+    "enterprise_size": "Large",
+    "state": "Punjab",
+    "city": "Ludhiana",
+    "quarter": "Q3",
+    "annual_revenue": 1500.0,
+    "annual_expenses": 600.0,
+    "loan_amount": 200.0,
+    "landholding_size": 45.0,
+    "crop_type": "Wheat",
+    "irrigation_type": "Sprinkler",
+    "yield_amount": 8.5
+  }
+}

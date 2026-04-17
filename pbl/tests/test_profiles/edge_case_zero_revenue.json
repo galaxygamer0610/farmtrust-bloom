@@ -1,0 +1,16 @@
+{
+  "expected_outcome": "HIGH RISK / EDGE CASE - Zero revenue prevents standard ratio calculation. Should test system resilience.",
+  "input": {
+    "enterprise_size": "Small",
+    "state": "Karnatka",
+    "city": "Hassan",
+    "quarter": "Q4",
+    "annual_revenue": 0.0,
+    "annual_expenses": 100.0,
+    "loan_amount": 500.0,
+    "landholding_size": 10.0,
+    "crop_type": "Coffee",
+    "irrigation_type": "Borewell",
+    "yield_amount": 1.0
+  }
+}
