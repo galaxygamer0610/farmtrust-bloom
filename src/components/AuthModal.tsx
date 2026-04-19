@@ -315,6 +315,22 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
                     {!loading && <ArrowRight className="h-4 w-4" />}
                   </Button>
 
+                  {mode === "login" && (
+                    <div className="text-center">
+                      <a
+                        href="/forgot-password"
+                        className="text-sm text-primary hover:underline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleClose();
+                          window.location.href = "/forgot-password";
+                        }}
+                      >
+                        Forgot Password?
+                      </a>
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => { setMode("choice"); setError(""); }}
