@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { X, Mail, Lock, User, ArrowRight, Sprout, CheckCircle2 } from "lucide-react";
 import { authHelpers } from "@/lib/auth-helpers";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface AuthModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"choice" | "login" | "register" | "verify">("choice");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -317,17 +319,18 @@ const AuthModal = ({ open, onClose, onSuccess }: AuthModalProps) => {
 
                   {mode === "login" && (
                     <div className="text-center">
-                      <a
-                        href="/forgot-password"
+                      <button
+                        type="button"
                         className="text-sm text-primary hover:underline"
-                        onClick={(e) => {
-                          e.preventDefault();
+                        onClick={() => {
                           handleClose();
-                          window.location.href = "/forgot-password";
+                          setTimeout(() => {
+                            navigate("/forgot-password");
+                          }, 100);
                         }}
                       >
                         Forgot Password?
-                      </a>
+                      </button>
                     </div>
                   )}
 

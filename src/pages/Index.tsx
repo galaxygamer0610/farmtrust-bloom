@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sprout, Shield, HandCoins, BarChart3, Users, Leaf, Brain, FileText, MessageCircle, ChevronRight, Star } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
+import { authHelpers } from "@/lib/auth-helpers";
 import heroImage from "@/assets/hero-farm.jpg";
 
 const features = [
@@ -47,10 +48,29 @@ const testimonials = [
 
 const Index = () => {
   const [authOpen, setAuthOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  const handleCTA = () => {
-    setAuthOpen(true);
+  // Check if user is logged in on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { user } = await authHelpers.getCurrentUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+  }, []);
+
+  const handleCTA = async () => {
+    // Check if user is logged in
+    const { user } = await authHelpers.getCurrentUser();
+    
+    if (user) {
+      // User is logged in, scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // User is not logged in, open auth modal
+      setAuthOpen(true);
+    }
   };
 
   const handleAuthSuccess = async () => {
