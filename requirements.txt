@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+scikit-learn
+xgboost
+pandas
+numpy
+aiohttp
+optuna
