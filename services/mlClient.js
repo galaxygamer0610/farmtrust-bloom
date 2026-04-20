@@ -3,7 +3,7 @@ const config = require('../config/config');
 const logger = require('../utils/logger');
 
 /**
- * Forward the assembled payload to the ML microservice
+ * Forward the assembled payload to the ML microservicegit 
  */
 const callMLService = async (payload) => {
   if (!config.ngrokUrl) {
