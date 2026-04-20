@@ -16,17 +16,37 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isValidSession, setIsValidSession] = useState(false);
+  const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user has a valid session (came from reset link)
     const checkSession = async () => {
-      const { session } = await authHelpers.getSession();
-      if (session) {
-        setIsValidSession(true);
-      } else {
-        toast.error("Invalid or expired reset link");
+      try {
+        // Add a small delay to ensure URL params are loaded
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { session, error } = await authHelpers.getSession();
+        
+        if (error) {
+          console.error("Session error:", error);
+          setIsValidSession(false);
+          toast.error("Invalid or expired reset link");
+          setTimeout(() => navigate("/forgot-password"), 2000);
+          return;
+        }
+        
+        if (session) {
+          setIsValidSession(true);
+        } else {
+          setIsValidSession(false);
+          toast.error("Invalid or expired reset link");
+          setTimeout(() => navigate("/forgot-password"), 2000);
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+        setIsValidSession(false);
+        toast.error("Error validating reset link");
         setTimeout(() => navigate("/forgot-password"), 2000);
       }
     };
@@ -82,12 +102,23 @@ const ResetPassword = () => {
     }
   };
 
-  if (!isValidSession) {
+  if (isValidSession === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Verifying reset link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isValidSession === false) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-destructive">Invalid or expired reset link</p>
+          <p className="mt-2 text-muted-foreground">Redirecting...</p>
         </div>
       </div>
     );

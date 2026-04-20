@@ -12,6 +12,7 @@ export interface FarmerFormData {
   email: string; // Added email field
   phoneNumber: string;
   aadhaarNumber: string;
+  farmerId: string; // Added Farmer ID field
   
   // Location & Timing
   state: string;
@@ -43,6 +44,7 @@ const OnboardingForm = ({ onComplete, initialEmail = "" }: OnboardingFormProps) 
     email: initialEmail, // Pre-fill with authenticated user's email
     phoneNumber: "",
     aadhaarNumber: "",
+    farmerId: "",
     state: "",
     district: "",
     farmingSeason: "",
@@ -111,16 +113,34 @@ const OnboardingForm = ({ onComplete, initialEmail = "" }: OnboardingFormProps) 
           </div>
           
           <div>
-            <Label className="mb-2 block text-sm sm:text-base font-medium text-foreground">Aadhaar Number (Optional)</Label>
+            <Label className="mb-2 block text-sm sm:text-base font-medium text-foreground">Aadhaar Number *</Label>
             <Input 
+              type="text"
               placeholder="Enter 12-digit Aadhaar number" 
               value={data.aadhaarNumber} 
-              onChange={e => update("aadhaarNumber", e.target.value)} 
+              onChange={e => {
+                const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                update("aadhaarNumber", value);
+              }} 
               className="h-11 sm:h-12 text-base"
               maxLength={12}
             />
             <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-              Recommended for better subsidy matching
+              Required for subsidy matching and verification
+            </p>
+          </div>
+          
+          <div>
+            <Label className="mb-2 block text-sm sm:text-base font-medium text-foreground">Farmer ID *</Label>
+            <Input 
+              type="text"
+              placeholder="Enter your Farmer ID" 
+              value={data.farmerId} 
+              onChange={e => update("farmerId", e.target.value)} 
+              className="h-11 sm:h-12 text-base"
+            />
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
+              Your unique farmer identification number
             </p>
           </div>
         </div>
@@ -314,7 +334,13 @@ const OnboardingForm = ({ onComplete, initialEmail = "" }: OnboardingFormProps) 
   const canProceed = () => {
     switch(step) {
       case 0:
-        return data.farmerName && data.email && data.phoneNumber;
+        return data.farmerName && 
+               data.email && 
+               data.phoneNumber && 
+               data.phoneNumber.length === 10 &&
+               data.aadhaarNumber && 
+               data.aadhaarNumber.length === 12 &&
+               data.farmerId;
       case 1:
         return data.state && data.district && data.farmingSeason;
       case 2:

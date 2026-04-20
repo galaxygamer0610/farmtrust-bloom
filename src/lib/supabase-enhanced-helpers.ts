@@ -238,6 +238,7 @@ export const enhancedSupabaseHelpers = {
       farmerName: string;
       phoneNumber: string;
       aadhaarNumber?: string;
+      farmerId?: string;
       state: string;
       district: string;
       region: string;
@@ -265,18 +266,25 @@ export const enhancedSupabaseHelpers = {
         if (existingFarmer) {
           farmerId = existingFarmer.id;
         } else {
+          const insertData: any = {
+            user_id: params.userId,
+            full_name: params.farmerName,
+            email: params.email,
+            phone: params.phoneNumber,
+            government_id: params.aadhaarNumber,
+            farm_location: `${params.district}, ${params.state}`,
+            farm_size_acres: params.landholdingSize,
+            crop_types: [params.cropType],
+          };
+          
+          // Only add farmer_id if provided (for backward compatibility)
+          if (params.farmerId) {
+            insertData.farmer_id = params.farmerId;
+          }
+          
           const { data: newFarmer, error: farmerError } = await supabase
             .from("farmers")
-            .insert({
-              user_id: params.userId,
-              full_name: params.farmerName,
-              email: params.email,
-              phone: params.phoneNumber,
-              government_id: params.aadhaarNumber,
-              farm_location: `${params.district}, ${params.state}`,
-              farm_size_acres: params.landholdingSize,
-              crop_types: [params.cropType],
-            })
+            .insert(insertData)
             .select()
             .single();
 

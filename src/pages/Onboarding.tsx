@@ -100,13 +100,14 @@ const Onboarding = () => {
       const quarter = seasonToQuarter[data.farmingSeason] || "Q1";
 
       // Use enhanced workflow to complete onboarding
-      const { data: onboardingResult, error: onboardingError } = 
+      const { data: onboardingResult, error: onboardingError} = 
         await enhancedSupabaseHelpers.workflow.completeOnboarding({
           userId: user.id,
           email: user.email || "",
           farmerName: data.farmerName,
           phoneNumber: data.phoneNumber,
           aadhaarNumber: data.aadhaarNumber,
+          farmerId: data.farmerId,
           state: data.state,
           district: data.district,
           region: region,
@@ -124,7 +125,13 @@ const Onboarding = () => {
 
       if (onboardingError || !onboardingResult) {
         console.error("Error in onboarding:", onboardingError);
-        toast.error("Failed to save data. Please try again.");
+        
+        // Check if it's a column error
+        if (onboardingError?.message?.includes('farmer_id') || onboardingError?.message?.includes('column')) {
+          toast.error("Database schema needs to be updated. Please contact support.");
+        } else {
+          toast.error("Failed to save data. Please try again.");
+        }
         return;
       }
 
