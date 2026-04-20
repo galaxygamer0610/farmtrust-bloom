@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Sun, Droplets, Sprout, Wrench, Shield, Landmark, CheckCircle2, ArrowRight, DollarSign, TrendingUp, Factory, Leaf, Beef, Zap, FlaskConical, ShoppingCart } from "lucide-react";
+import { Search, Sun, Droplets, Sprout, Wrench, Shield, Landmark, CheckCircle2, ArrowRight, DollarSign, TrendingUp, Factory, Leaf, Beef, Zap, FlaskConical, ShoppingCart, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Subsidy {
   name: string;
@@ -199,6 +200,8 @@ const getCategoryIcon = (category: string) => {
 const Subsidies = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   const filtered = allSchemes.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -207,6 +210,28 @@ const Subsidies = () => {
     const matchesCategory = activeCategory === "all" || s.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSchemes = filtered.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-background py-6 sm:py-8 md:py-10">
@@ -224,32 +249,43 @@ const Subsidies = () => {
 
         {/* Search & Filter */}
         <motion.div
-          className="mb-5 sm:mb-6 md:mb-8 flex flex-col gap-3"
+          className="mb-5 sm:mb-6 md:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search schemes by name, description, or benefit..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="h-11 sm:h-12 pl-10 sm:pl-11 text-sm sm:text-base"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 mb-3">
+            {/* Search Bar - Half Width */}
+            <div className="relative flex-1 sm:max-w-[50%]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search schemes..."
+                value={search}
+                onChange={e => handleSearchChange(e.target.value)}
+                className="h-11 sm:h-12 pl-10 sm:pl-11 text-sm sm:text-base"
+              />
+            </div>
+            
+            {/* Category Dropdown Filter */}
+            <div className="flex-1 sm:max-w-[50%]">
+              <Select value={activeCategory} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <SelectValue placeholder="Filter by category" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value} className="text-sm sm:text-base">
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-            {categories.map(cat => (
-              <Button
-                key={cat.value}
-                variant={activeCategory === cat.value ? "default" : "outline"}
-                onClick={() => setActiveCategory(cat.value)}
-                className="whitespace-nowrap px-3 sm:px-4 md:px-5 py-2 text-xs sm:text-sm"
-              >
-                {cat.label}
-              </Button>
-            ))}
-          </div>
+          
           {activeCategory !== "all" && (
             <p className="text-sm text-muted-foreground">
               Showing {filtered.length} scheme{filtered.length !== 1 ? 's' : ''} in {activeCategory}
@@ -259,7 +295,7 @@ const Subsidies = () => {
 
         {/* Schemes Grid */}
         <div className="grid gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((scheme, i) => {
+          {currentSchemes.map((scheme, i) => {
             const Icon = getCategoryIcon(scheme.category);
             return (
               <motion.div
@@ -298,6 +334,54 @@ const Subsidies = () => {
           })}
         </div>
 
+        {/* Pagination */}
+        {filtered.length > itemsPerPage && (
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="min-w-[40px]"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="gap-1"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Pagination Info */}
+        {filtered.length > 0 && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of {filtered.length} schemes
+          </p>
+        )}
+
         {filtered.length === 0 && (
           <div className="py-10 sm:py-12 text-center">
             <p className="text-base text-muted-foreground mb-2">No schemes match your search.</p>
@@ -306,6 +390,7 @@ const Subsidies = () => {
               onClick={() => {
                 setSearch("");
                 setActiveCategory("all");
+                setCurrentPage(1);
               }}
               variant="outline"
               className="mt-4"
