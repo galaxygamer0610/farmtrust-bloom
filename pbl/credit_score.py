@@ -9,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from feature_engineering import build_features_df, build_features_dict
+from shap_explainer import get_shap_top_features
 import config
 
 class CreditModel:
@@ -187,10 +188,18 @@ class CreditModel:
 
     def calculate_credit_score_and_risk(self, farmer_data: dict) -> dict:
         if self.model is None:
+            print("DEBUG: Model is None, loading model...")
             self.load_model()
+        
+        print(f"DEBUG: Model loaded: {self.model_name}")
+        print(f"DEBUG: Input data keys: {farmer_data.keys()}")
             
         feat_dict = build_features_dict(farmer_data)
+        print(f"DEBUG: Feature dict sample: {list(feat_dict.items())[:5]}")
+        
         input_df = pd.DataFrame([feat_dict], columns=config.ALL_FEATURES).fillna(0)
+        print(f"DEBUG: Input shape: {input_df.shape}")
+        print(f"DEBUG: Input sample:\n{input_df.iloc[0][:10]}")
         
         # Apply scaling if the selected model is Logistic Regression
         if self.model_name == "Logistic Regression" and self.scaler:
@@ -198,9 +207,16 @@ class CreditModel:
             
         prob_default = self.model.predict_proba(input_df)[0][1]
         
+        # Debug logging
+        print(f"DEBUG: prob_default = {prob_default}")
+        print(f"DEBUG: Model name = {self.model_name}")
+        print(f"DEBUG: Threshold = {self.threshold}")
+        
         # Use optimized threshold for classification
         prediction = 1 if prob_default >= self.threshold else 0
         credit_score = (1 - prob_default) * 100
+        
+        print(f"DEBUG: credit_score = {credit_score}")
         
         if credit_score >= 80:
             category, rec = "Low Risk", "Eligible - proceed with standard loan terms"
@@ -208,17 +224,65 @@ class CreditModel:
             category, rec = "Medium Risk", "Conditional - reduced amount or additional review"
         else:
             category, rec = "High Risk", "High risk - flag for manual review before approval"
+        
+        # Calculate eligibility score (Harvest Score)
+        eligibility_score = self.calculate_eligibility_score(feat_dict, prob_default)
+        
+        # Calculate eligible loan amount
+        requested_amount = farmer_data.get('loan_amount', 0)
+        eligible_amount = requested_amount * eligibility_score
             
-        top_features = self.get_top_features(feat_dict)
+        # Get top features using SHAP
+        top_features = get_shap_top_features(self.model, self.model_name, self.scaler, feat_dict, top_k=5)
             
         return {
             "probability_of_default": round(float(prob_default), 4),
             "credit_score": round(float(credit_score), 2),
             "risk_category": category,
             "lending_recommendation": rec,
+            "eligibility_score": round(float(eligibility_score), 4),
+            "eligible_amount": round(float(eligible_amount), 2),
+            "requested_amount": round(float(requested_amount), 2),
             "top_features": top_features,
             "selected_model": self.model_name
         }
+    
+    def calculate_eligibility_score(self, feat_dict: dict, prob_default: float) -> float:
+        """
+        Calculate loan eligibility score (Harvest Score) based on financial metrics
+        
+        Formula:
+        Eligibility Score = (0.40 × repayment_capacity) + 
+                           (0.30 × financial_stability) + 
+                           (0.15 × (1 - leverage_risk)) + 
+                           (0.15 × (1 - risk_score))
+        
+        Where:
+        - repayment_capacity: Ability to repay based on profit margins (0-1)
+        - financial_stability: Overall financial health (0-1)
+        - leverage_risk: Debt burden relative to equity (0-1, lower is better)
+        - risk_score: Probability of default from ML model (0-1, lower is better)
+        
+        Returns: Score between 0 and 1 (multiply by 100 for percentage)
+        """
+        # Extract engineered features (already calculated in feat_dict)
+        repayment_capacity = feat_dict.get('repayment_capacity', 0.5)
+        financial_stability = feat_dict.get('financial_stability', 0.5)
+        leverage_risk = feat_dict.get('leverage_risk', 0.5)
+        risk_score = prob_default  # Use ML model's probability of default
+        
+        # Calculate weighted eligibility score
+        eligibility = (
+            0.40 * repayment_capacity +
+            0.30 * financial_stability +
+            0.15 * (1 - leverage_risk) +
+            0.15 * (1 - risk_score)
+        )
+        
+        # Clamp to valid range [0, 1]
+        eligibility = np.clip(eligibility, 0, 1)
+        
+        return float(eligibility)
 
     def get_top_features(self, feat_dict: dict, top_k: int = 5) -> list:
         if self.model is None:
